@@ -1,0 +1,215 @@
+{% extends 'base/base.html' %}
+{% block title %}Appointment Detail - HealthCare Portal{% endblock %}
+{% block page_title %}Appointment Details{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Left Column: Appointment Snapshot -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 mb-4 overflow-hidden">
+            <div class="card-header bg-warning py-4 text-center border-0">
+                <div class="icon-circle mx-auto mb-3 shadow bg-white">
+                    <i class="fas fa-calendar-check fa-2x text-warning"></i>
+                </div>
+                <h4 class="text-dark mb-1 fw-bold">Appointment Info</h4>
+                <div class="badge {% if appointment.status == 'scheduled' %}bg-primary{% elif appointment.status == 'confirmed' %}bg-success{% elif appointment.status == 'completed' %}bg-secondary{% elif appointment.status == 'cancelled' %}bg-danger{% else %}bg-info{% endif %} px-3 py-2 rounded-pill shadow-sm">
+                    {{ appointment.get_status_display }}
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <ul class="list-group list-group-flush mb-4">
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0 px-0">
+                        <span class="text-muted small text-uppercase fw-bold">Patient</span>
+                        <a href="{% url 'patient_detail' appointment.patient.pk %}" class="fw-bold text-decoration-none text-dark d-flex align-items-center">
+                            <i class="fas fa-user-circle me-2 text-muted"></i>{{ appointment.patient.get_full_name }}
+                        </a>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0 px-0">
+                        <span class="text-muted small text-uppercase fw-bold">Primary Doctor</span>
+                        <a href="{% url 'doctor_detail' appointment.doctor.pk %}" class="fw-bold text-decoration-none text-success d-flex align-items-center">
+                            <i class="fas fa-user-md me-2 text-muted"></i>{{ appointment.doctor.get_full_name }}
+                        </a>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0 px-0">
+                        <span class="text-muted small text-uppercase fw-bold">Schedule</span>
+                        <div class="text-end">
+                            <div class="fw-bold">{{ appointment.appointment_date|date:"D, d M Y" }}</div>
+                            <div class="small text-muted">{{ appointment.appointment_time|time:"H:i" }}</div>
+                        </div>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0 px-0">
+                        <span class="text-muted small text-uppercase fw-bold">Visit Type</span>
+                        <span class="badge bg-light text-dark border rounded-pill px-3">{{ appointment.get_appointment_type_display }}</span>
+                    </li>
+                    {% if appointment.follow_up_date %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0 px-0">
+                        <span class="text-muted small text-uppercase fw-bold">Follow-up On</span>
+                        <span class="fw-bold text-primary">{{ appointment.follow_up_date|date:"d M Y" }}</span>
+                    </li>
+                    {% endif %}
+                </ul>
+
+                {% if appointment.reason %}
+                <div class="bg-light p-3 rounded-3 mb-3 border-start border-4 border-warning">
+                    <div class="extra-small text-muted fw-bold mb-1 text-uppercase">Reason for Visit</div>
+                    <p class="mb-0 small text-dark">{{ appointment.reason }}</p>
+                </div>
+                {% endif %}
+
+                {% if appointment.notes %}
+                <div class="bg-light p-3 rounded-3 mb-0 border-start border-4 border-info">
+                    <div class="extra-small text-muted fw-bold mb-1 text-uppercase">Internal Notes</div>
+                    <p class="mb-0 small text-dark">{{ appointment.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-white p-4 border-top-0">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'appointment_update' appointment.pk %}" class="btn btn-warning text-dark fw-bold shadow-sm">
+                        <i class="fas fa-calendar-edit me-2"></i>Edit Appointment
+                    </a>
+                    <a href="{% url 'appointment_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Schedule
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Status Update -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-0 py-3">
+                <h6 class="mb-0 fw-bold"><i class="fas fa-tasks me-2 text-primary"></i>Quick Status Update</h6>
+            </div>
+            <div class="card-body p-4 pt-0">
+                <form method="post" action="{% url 'update_status' appointment.pk %}">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <select name="status" class="form-select border-primary-subtle">
+                            {% for val, label in appointment.STATUS_CHOICES %}
+                            <option value="{{ val }}" {% if appointment.status == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Prescriptions & Medical Records -->
+    <div class="col-lg-7">
+        {% if prescription %}
+        <div class="card shadow-sm border-0 mb-4 overflow-hidden">
+            <div class="card-header bg-success py-3 px-4 d-flex justify-content-between align-items-center text-white">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-prescription fa-lg me-3"></i>
+                    <h6 class="mb-0 fw-bold">Active Prescription</h6>
+                </div>
+                <div class="small opacity-75">Issued: {{ prescription.issued_date|date:"d M Y" }}</div>
+            </div>
+            <div class="card-body p-4">
+                {% if prescription.notes %}
+                <div class="mb-4">
+                    <div class="extra-small text-muted fw-bold mb-1 text-uppercase">Physician's Notes</div>
+                    <p class="mb-0 small italic">"{{ prescription.notes }}"</p>
+                </div>
+                {% endif %}
+
+                <div class="table-responsive rounded-3 border">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="px-3 py-3 border-0 small text-uppercase text-muted">Medicine</th>
+                                <th class="py-3 border-0 small text-uppercase text-muted">Dosage</th>
+                                <th class="py-3 border-0 small text-uppercase text-muted">Frequency</th>
+                                <th class="py-3 border-0 small text-uppercase text-muted">Duration</th>
+                                <th class="px-3 py-3 border-0"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in prescription.items.all %}
+                            <tr>
+                                <td class="px-3 py-3">
+                                    <div class="fw-bold text-primary">{{ item.medicine_name }}</div>
+                                    <div class="extra-small text-muted">{{ item.instructions|default:"No specific instructions" }}</div>
+                                </td>
+                                <td><span class="badge bg-info-subtle text-info border px-2 py-1">{{ item.dosage }}</span></td>
+                                <td><span class="small text-dark">{{ item.frequency }}</span></td>
+                                <td><span class="small text-muted">{{ item.duration }}</span></td>
+                                <td class="px-3 py-3 text-end">
+                                    <i class="fas fa-info-circle text-muted" data-bs-toggle="tooltip" title="{{ item.instructions }}"></i>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="py-4 text-center text-muted italic small">No medicine items found in this prescription.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if prescription.valid_until %}
+                <div class="mt-4 p-3 bg-light rounded-pill text-center border">
+                    <small class="fw-bold text-muted text-uppercase">Valid Until:</small>
+                    <span class="ms-2 fw-bold text-danger">{{ prescription.valid_until|date:"M d, Y" }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <!-- No Prescription State -->
+        <div class="card shadow-sm border-0 mb-4 p-5 text-center">
+            <div class="mb-3">
+                <div class="icon-circle bg-light mx-auto mb-4" style="width: 80px; height: 80px;">
+                    <i class="fas fa-prescription-bottle-alt fa-3x text-muted opacity-25"></i>
+                </div>
+                <h5 class="fw-bold">No Prescription Issued</h5>
+                <p class="text-muted px-lg-5">A prescription has not been added to this appointment yet. You can add one once the clinical assessment is complete.</p>
+                <a href="{% url 'add_prescription' appointment.pk %}" class="btn btn-success btn-lg px-5 mt-3 shadow-sm rounded-pill fw-bold">
+                    <i class="fas fa-plus-circle me-2"></i>Issue Prescription
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Delete Safety -->
+        <div class="card shadow-sm border-0 border-top border-5 border-danger p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-1 fw-bold text-danger">Cancellation Zone</h6>
+                    <p class="mb-0 text-muted small">Need to cancel or remove this appointment entirely?</p>
+                </div>
+                <a href="{% url 'appointment_delete' appointment.pk %}" class="btn btn-outline-danger btn-sm px-4 rounded-pill">
+                    <i class="fas fa-trash-alt me-2"></i>Delete Record
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .icon-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .extra-small {
+        font-size: 0.7rem;
+        letter-spacing: 0.5px;
+    }
+    .italic {
+        font-style: italic;
+    }
+    .badge {
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+    .icon-circle.bg-light {
+        background-color: #f8f9fa !important;
+    }
+</style>
+{% endblock %}

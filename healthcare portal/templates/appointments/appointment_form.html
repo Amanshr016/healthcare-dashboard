@@ -1,0 +1,140 @@
+{% extends 'base/base.html' %}
+{% block title %}{{ title }} - HealthCare Portal{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 px-4 d-flex align-items-center">
+                <i class="fas fa-calendar-plus text-warning fa-lg me-3"></i>
+                <h5 class="mb-0 fw-bold text-dark">{{ title }}</h5>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <form method="post" class="needs-validation">
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger mb-4 rounded-3 shadow-sm">
+                        <h6 class="alert-heading fw-bold small"><i class="fas fa-exclamation-circle me-2"></i>Please correct the following:</h6>
+                        <ul class="mb-0 ps-3 small">
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                    <li class="mb-1"><strong class="text-capitalize">{{ field }}:</strong> {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <div class="row g-4">
+                        <!-- Stakeholders Section -->
+                        <div class="col-12">
+                            <h6 class="text-warning border-bottom pb-2 mb-3"><i class="fas fa-users me-2"></i>Participants</h6>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Select Patient *</label>
+                            <select name="patient" class="form-select form-select-lg" required>
+                                <option value="" selected disabled>Choose Patient...</option>
+                                {% for p in form.fields.patient.queryset %}
+                                    <option value="{{ p.pk }}" {% if form.instance.patient_id == p.pk or form.patient.value|add:0 == p.pk %}selected{% endif %}>{{ p.get_full_name }} (ID: #PAT-{{ p.id|stringformat:"04d" }})</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text extra-small">Register <a href="{% url 'patient_create' %}" class="text-warning">new patient</a> if not listed.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Assign Doctor *</label>
+                            <select name="doctor" class="form-select form-select-lg" required>
+                                <option value="" selected disabled>Choose Doctor...</option>
+                                {% for d in form.fields.doctor.queryset %}
+                                    <option value="{{ d.pk }}" {% if form.instance.doctor_id == d.pk or form.doctor.value|add:0 == d.pk %}selected{% endif %}>Dr. {{ d.get_full_name }} ({{ d.specialization.name|default:"General" }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Schedule Section -->
+                        <div class="col-12 mt-5">
+                            <h6 class="text-warning border-bottom pb-2 mb-3"><i class="fas fa-clock me-2"></i>Schedule & Visit Type</h6>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Appointment Date *</label>
+                            <input type="date" name="appointment_date" class="form-control form-control-lg" value="{{ form.appointment_date.value|date:'Y-m-d'|default:form.appointment_date.value|default:'' }}" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Appointment Time *</label>
+                            <input type="time" name="appointment_time" class="form-control form-control-lg" value="{{ form.appointment_time.value|time:'H:i'|default:form.appointment_time.value|default:'' }}" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Visit Type</label>
+                            <select name="appointment_type" class="form-select form-select-lg">
+                                {% for val, label in form.fields.appointment_type.choices %}
+                                    <option value="{{ val }}" {% if form.appointment_type.value == val %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Current Status</label>
+                            <select name="status" class="form-select">
+                                {% for val, label in form.fields.status.choices %}
+                                    <option value="{{ val }}" {% if form.status.value == val %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Proposed Follow-up</label>
+                            <input type="date" name="follow_up_date" class="form-control" value="{{ form.follow_up_date.value|date:'Y-m-d'|default:form.follow_up_date.value|default:'' }}">
+                        </div>
+
+                        <!-- Details Section -->
+                        <div class="col-12 mt-5">
+                            <h6 class="text-warning border-bottom pb-2 mb-3"><i class="fas fa-notes-medical me-2"></i>Consultation Details</h6>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Reason for Visit</label>
+                            <textarea name="reason" class="form-control" rows="3" placeholder="Chief complaints or purpose of the appointment...">{{ form.reason.value|default:'' }}</textarea>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Internal Clinical Notes</label>
+                            <textarea name="notes" class="form-control" rows="2" placeholder="Private notes for medical staff only...">{{ form.notes.value|default:'' }}</textarea>
+                        </div>
+
+                        <div class="col-12 mt-5">
+                            <hr class="opacity-50">
+                            <div class="d-flex gap-3 mt-4">
+                                <button type="submit" class="btn btn-warning btn-lg px-5 shadow-sm text-dark fw-bold">
+                                    <i class="fas fa-save me-2"></i>Save Appointment
+                                </button>
+                                <a href="{% url 'appointment_list' %}" class="btn btn-outline-secondary btn-lg px-4 border-2">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control:focus, .form-select:focus {
+        border-color: #ffc107;
+        box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.15);
+    }
+    .extra-small {
+        font-size: 0.72rem;
+    }
+    .form-select-lg {
+        font-size: 1rem;
+    }
+</style>
+{% endblock %}

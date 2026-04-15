@@ -1,0 +1,30 @@
+{% extends 'base/base.html' %}
+{% block title %}Confirm Deletion{% endblock %}
+{% block page_title %}Remove Medicine{% endblock %}
+
+{% block content %}
+<div class="card mx-auto shadow-sm border-0" style="max-width: 500px;">
+    <div class="card-body p-5 text-center">
+        <div class="mb-4 text-danger">
+            <i class="fas fa-exclamation-triangle fa-4x opacity-75"></i>
+        </div>
+        <h3 class="fw-bold mb-3">Are you sure?</h3>
+        <p class="text-muted mb-4">
+            You are about to remove <strong>{{ medicine.name }}</strong> from the active inventory. 
+            This action will hide it from the stock list but preserve transaction history.
+        </p>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-danger btn-lg shadow-sm">
+                    <i class="fas fa-trash-alt me-2"></i>Confirm Deletion
+                </button>
+                <a href="{% url 'medicine_detail' medicine.pk %}" class="btn btn-light btn-lg">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

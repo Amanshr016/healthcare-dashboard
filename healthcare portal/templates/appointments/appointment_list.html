@@ -1,0 +1,157 @@
+{% extends 'base/base.html' %}
+{% block title %}Appointments Management - HealthCare Portal{% endblock %}
+{% block page_title %}Appointments{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form method="get" class="row g-3">
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" name="q" class="form-control border-start-0 ps-0" placeholder="Search patient or doctor..." value="{{ query }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="status" class="form-select border-start-0 ps-0">
+                            <option value="">All Statuses</option>
+                            {% for val, label in status_choices %}
+                            <option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex gap-2">
+                        <button class="btn btn-warning px-4 text-dark flex-fill fw-bold" type="submit">
+                            <i class="fas fa-filter me-2"></i>Filter
+                        </button>
+                        <a href="{% url 'appointment_list' %}" class="btn btn-outline-secondary px-4">Clear</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 overflow-visible">
+    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-calendar-alt text-warning me-2"></i>
+            <h6 class="mb-0 fw-bold">Appointment Schedule</h6>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'today_appointments' %}" class="btn btn-outline-info btn-sm rounded-pill px-3">
+                <i class="fas fa-calendar-day me-1"></i>Today
+            </a>
+            <a href="{% url 'appointment_create' %}" class="btn btn-warning btn-sm text-dark rounded-pill px-3 fw-bold">
+                <i class="fas fa-plus me-1"></i>Book New
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive" style="overflow: visible;">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="px-4 py-3 small text-uppercase text-muted border-0">Patient</th>
+                        <th class="py-3 small text-uppercase text-muted border-0">Doctor</th>
+                        <th class="py-3 small text-uppercase text-muted border-0">Schedule</th>
+                        <th class="py-3 small text-uppercase text-muted border-0">Type</th>
+                        <th class="py-3 small text-uppercase text-muted border-0 text-center">Status</th>
+                        <th class="px-4 py-3 small text-uppercase text-muted border-0 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    {% for appt in appointments %}
+                    <tr>
+                        <td class="px-4 py-3">
+                            <div class="fw-bold">
+                                <a href="{% url 'patient_detail' appt.patient.pk %}" class="text-decoration-none text-dark">{{ appt.patient.get_full_name }}</a>
+                            </div>
+                            <div class="text-muted extra-small">ID: #PAT-{{ appt.patient.id|stringformat:"04d" }}</div>
+                        </td>
+                        <td>
+                            <div class="fw-semibold">{{ appt.doctor.get_full_name }}</div>
+                            <div class="text-muted extra-small">{{ appt.doctor.specialization.name }}</div>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark small">{{ appt.appointment_date|date:"d M Y" }}</div>
+                            <div class="text-muted extra-small"><i class="far fa-clock me-1"></i>{{ appt.appointment_time|time:"H:i" }}</div>
+                        </td>
+                        <td>
+                            <span class="small text-muted">{{ appt.get_init_type_display|default:appt.appointment_type }}</span>
+                        </td>
+                        <td class="text-center">
+                            {% if appt.status == 'scheduled' %}
+                                <span class="badge bg-primary-subtle text-primary rounded-pill px-3">Scheduled</span>
+                            {% elif appt.status == 'confirmed' %}
+                                <span class="badge bg-success-subtle text-success rounded-pill px-3">Confirmed</span>
+                            {% elif appt.status == 'completed' %}
+                                <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3">Completed</span>
+                            {% elif appt.status == 'cancelled' %}
+                                <span class="badge bg-danger-subtle text-danger rounded-pill px-3">Cancelled</span>
+                            {% else %}
+                                <span class="badge bg-light text-muted rounded-pill px-3">{{ appt.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-end">
+                            <div class="d-flex justify-content-end gap-1">
+                                <a href="{% url 'appointment_detail' appt.pk %}" class="btn btn-sm btn-outline-info action-btn" data-bs-toggle="tooltip" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'appointment_update' appt.pk %}" class="btn btn-sm btn-outline-warning action-btn" data-bs-toggle="tooltip" title="Reschedule">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'appointment_delete' appt.pk %}" class="btn btn-sm btn-outline-danger action-btn" data-bs-toggle="tooltip" title="Cancel">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="py-5 text-center text-muted">
+                            <div class="mb-3">
+                                <i class="fas fa-calendar-times fa-4x opacity-25"></i>
+                            </div>
+                            <h5 class="fw-normal">No appointments found.</h5>
+                            <p>Adjust your filters or book a new appointment to get started.</p>
+                            <a href="{% url 'appointment_create' %}" class="btn btn-warning text-dark fw-bold px-4">Book New Appointment</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .extra-small {
+        font-size: 0.72rem;
+    }
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+    .action-btn:hover {
+        transform: scale(1.1);
+    }
+    .badge {
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+    .table th {
+        font-size: 0.7rem !important;
+        letter-spacing: 0.05rem;
+    }
+</style>
+{% endblock %}

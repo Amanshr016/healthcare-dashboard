@@ -1,0 +1,158 @@
+{% extends 'base/base.html' %}
+{% block title %}{{ title }} - HealthCare Portal{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3 px-4">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-user-injured text-primary fa-lg me-3"></i>
+                    <h5 class="mb-0 fw-bold">{{ title }}</h5>
+                </div>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                    <div class="alert alert-danger mb-4">
+                        <h6 class="alert-heading fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Please correct the following errors:</h6>
+                        <ul class="mb-0 small">
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                    <li><strong>{{ field|title }}:</strong> {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <div class="row g-4">
+                        <!-- Primary Info -->
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3"><i class="fas fa-id-card me-2"></i>Primary Information</h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">First Name <span class="text-danger">*</span></label>
+                            <input type="text" name="first_name" class="form-control" value="{{ form.first_name.value|default:'' }}" required>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" name="last_name" class="form-control" value="{{ form.last_name.value|default:'' }}" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Date of Birth <span class="text-danger">*</span></label>
+                            <input type="date" name="date_of_birth" class="form-control" value="{{ form.date_of_birth.value|default:'' }}" required>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Gender <span class="text-danger">*</span></label>
+                            <select name="gender" class="form-select" required>
+                                <option value="" selected disabled>Select Gender</option>
+                                <option value="M" {% if form.gender.value == 'M' %}selected{% endif %}>Male</option>
+                                <option value="F" {% if form.gender.value == 'F' %}selected{% endif %}>Female</option>
+                                <option value="O" {% if form.gender.value == 'O' %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Blood Group</label>
+                            <select name="blood_group" class="form-select">
+                                <option value="" selected>Unknown / Not Specified</option>
+                                {% for val, label in form.fields.blood_group.choices %}
+                                    {% if val %}
+                                        <option value="{{ val }}" {% if form.blood_group.value == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Contact Info -->
+                        <div class="col-12 mt-5">
+                            <h6 class="text-primary border-bottom pb-2 mb-3"><i class="fas fa-address-book me-2"></i>Contact Information</h6>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Phone Number <span class="text-danger">*</span></label>
+                            <input type="text" name="phone" class="form-control" value="{{ form.phone.value|default:'' }}" placeholder="e.g. +1 234 567 890" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Email Address</label>
+                            <input type="email" name="email" class="form-control" value="{{ form.email.value|default:'' }}" placeholder="e.g. patient@example.com">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Residential Address <span class="text-danger">*</span></label>
+                            <textarea name="address" class="form-control" rows="3" required>{{ form.address.value|default:'' }}</textarea>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Emergency Contact Name</label>
+                            <input type="text" name="emergency_contact_name" class="form-control" value="{{ form.emergency_contact_name.value|default:'' }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Emergency Contact Phone</label>
+                            <input type="text" name="emergency_contact_phone" class="form-control" value="{{ form.emergency_contact_phone.value|default:'' }}">
+                        </div>
+
+                        <!-- Medical Details -->
+                        <div class="col-12 mt-5">
+                            <h6 class="text-primary border-bottom pb-2 mb-3"><i class="fas fa-notes-medical me-2"></i>Medical & Insurance Details</h6>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Known Allergies</label>
+                            <textarea name="allergies" class="form-control" rows="2" placeholder="List any known allergies...">{{ form.allergies.value|default:'' }}</textarea>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Chronic Conditions</label>
+                            <textarea name="chronic_conditions" class="form-control" rows="2" placeholder="e.g. Diabetes, Hypertension...">{{ form.chronic_conditions.value|default:'' }}</textarea>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Insurance Provider</label>
+                            <input type="text" name="insurance_provider" class="form-control" value="{{ form.insurance_provider.value|default:'' }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Insurance ID / Policy Number</label>
+                            <input type="text" name="insurance_id" class="form-control" value="{{ form.insurance_id.value|default:'' }}">
+                        </div>
+
+                        <div class="col-12 mt-5">
+                            <hr>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary px-4 py-2">
+                                    <i class="fas fa-save me-2"></i>{% if patient %}Update{% else %}Save{% endif %} Patient
+                                </button>
+                                <a href="{% url 'patient_list' %}" class="btn btn-outline-secondary px-4 py-2">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+    }
+    .card {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
